@@ -1,0 +1,6 @@
+{
+  "name": "Redactify",
+  "description": "A local redaction tool powered by Monaco Editor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

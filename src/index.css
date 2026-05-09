@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+*::selection {
+  background-color: #e03131 !important;
+  color: #ffffff !important;
+}
+
+*::-moz-selection {
+  background-color: #e03131 !important;
+  color: #ffffff !important;
+}
+
+.monaco-editor .find-widget .monaco-inputbox.synthetic-focus {
+  outline: 1px solid #e03131 !important;
+}
+
+.monaco-editor .find-widget .monaco-custom-toggle.checked {
+  border-color: #e03131 !important;
+}
+
+.decorationsOverviewRuler {
+  display: none !important;
+}
+
+.monaco-editor .find-widget {
+  border-top: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  transition: none !important;
+}
+
+.monaco-editor .find-widget:not(.visible),
+.monaco-editor .find-widget.hiddenEditor {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.monaco-editor .find-widget.visible:not(.hiddenEditor) {
+  opacity: 1 !important;
+}
+
+.monaco-editor .find-widget .button,
+.monaco-editor .find-widget .codicon-find-selection,
+.monaco-editor .find-widget .monaco-custom-toggle {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  text-decoration: none !important;
+}
+
+.monaco-editor .find-widget .button:focus,
+.monaco-editor .find-widget .button:focus-visible,
+.monaco-editor .find-widget .button:hover,
+.monaco-editor .find-widget .codicon-find-selection:focus,
+.monaco-editor .find-widget .codicon-find-selection:focus-visible,
+.monaco-editor .find-widget .codicon-find-selection:hover,
+.monaco-editor .find-widget .monaco-custom-toggle:focus,
+.monaco-editor .find-widget .monaco-custom-toggle:focus-visible,
+.monaco-editor .find-widget .monaco-custom-toggle:hover {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.monaco-editor .find-widget .monaco-custom-toggle.checked,
+.monaco-editor .find-widget .monaco-custom-toggle.checked:hover,
+.monaco-editor .find-widget .codicon-find-selection.checked,
+.monaco-editor .find-widget .codicon-find-selection.checked:focus,
+.monaco-editor .find-widget .codicon-find-selection.checked:focus-visible,
+.monaco-editor .find-widget .codicon-find-selection.checked:hover {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.monaco-hover,
+.workbench-hover-container,
+.workbench-hover-pointer {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.monaco-hover::before,
+.monaco-hover::after,
+.monaco-hover *::before,
+.monaco-hover *::after,
+.workbench-hover-container::before,
+.workbench-hover-container::after,
+.workbench-hover-container *::before,
+.workbench-hover-container *::after,
+.workbench-hover-pointer::before,
+.workbench-hover-pointer::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Fix Tailwind border-box reset shrinking Monaco buttons */
+.monaco-editor .find-widget .button:not(.toggle) {
+  box-sizing: content-box !important;
+}
+
+.monaco-editor .find-widget .button.toggle {
+  box-sizing: border-box !important;
+  width: 20px !important;
+  left: 2px !important;
+}
+
+.monaco-editor .find-widget > .find-part,
+.monaco-editor .find-widget > .replace-part {
+  margin-left: 24px !important;
+}
+
+.monaco-editor .find-widget .button.codicon-widget-close {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  top: 4.5px !important;
+  right: 4px !important;
+  transform: none !important;
+}
