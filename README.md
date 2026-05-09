@@ -9,8 +9,6 @@ A sleek, browser-based text redaction tool. Paste any text, select sensitive fra
 
 Built with React, Monaco Editor, and Vite.
 
-![Preview](https://img.shields.io/badge/status-live-brightgreen)
-
 ## Features
 
 - **Dual-pane editor** — original on the left, redacted preview on the right with synchronized scrolling and cursor mapping
