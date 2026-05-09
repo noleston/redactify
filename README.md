@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" />
+  <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" width="40%" />
 </p>
 
 <h1 align="center">Redactify</h1>
