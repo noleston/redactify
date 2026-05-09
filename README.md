@@ -1,20 +1,45 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Redactify
 
-# Run and deploy your AI Studio app
+A sleek, browser-based text redaction tool. Paste any text, select sensitive fragments, and instantly preview the redacted result — side by side, in real time.
 
-This contains everything you need to run your app locally.
+Built with React, Monaco Editor, and Vite.
 
-View your app in AI Studio: https://ai.studio/apps/0b65b303-e83b-4b44-8a23-de145c8c59fc
+![Preview](https://img.shields.io/badge/status-live-brightgreen)
 
-## Run Locally
+## Features
 
-**Prerequisites:**  Node.js
+- **Dual-pane editor** — original on the left, redacted preview on the right with synchronized scrolling and cursor mapping
+- **Multiple redaction styles** — blackout (`████`), `[REDACTED]` tag, or full removal
+- **Smart word snap** — selections automatically expand to word boundaries
+- **Strict masking** — character-level masking for fixed-length output
+- **Keyboard shortcuts** — `Ctrl+B` blackout, `Ctrl+Backspace` remove, `Ctrl+Z` undo redaction
+- **One-click copy** — grab the redacted output instantly
+- **Find & Replace** — full Monaco search inside both panes
+- **Dark theme** — minimal, VS Code-inspired UI with red accent
 
+## Quick Start
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+# Install dependencies
+npm install
+
+# Run dev server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Tech Stack
+
+- **React 19** + **TypeScript**
+- **Monaco Editor** — code editor component
+- **Zustand** — lightweight state management
+- **Motion** — animations
+- **Tailwind CSS v4** — styling
+- **Vite** — build tooling
+- **Lucide** — icons
+
+## License
+
+MIT
