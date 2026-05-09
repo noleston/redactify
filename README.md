@@ -2,8 +2,6 @@
   <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" width="40%" />
 </p>
 
-<h1 align="center">Redactify</h1>
-
 <h3 align="center">A sleek, browser-based text redaction tool.</h3>
 
 <p align="center">
