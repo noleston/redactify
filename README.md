@@ -1,5 +1,10 @@
 # Redactify
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-bg.png" width="100%" />
+</p>
+
+
 A sleek, browser-based text redaction tool. Paste any text, select sensitive fragments, and instantly preview the redacted result — side by side, in real time.
 
 Built with React, Monaco Editor, and Vite.
