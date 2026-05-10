@@ -1,9 +1,12 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { useRedactionStore } from './store';
-import { Check, Copy, Trash2, Eraser, Shield, Type, Settings } from 'lucide-react';
+import { Check, Copy, Trash2, Eraser, Shield, Type, Settings, ScanLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import rLogo from './assets/r_logo.svg';
+import ScannerPanel from './components/ScannerPanel';
+import { useScanStore } from './store/useScanStore';
+import { applyEditToMonaco } from './lib/applyRedaction';
 
 
 const getReplacementText = (originalText: string, replacementType: string, fixedLength: boolean, strictMasking: boolean) => {
@@ -100,6 +103,18 @@ export default function App() {
   const [findWidgetOpen, setFindWidgetOpen] = useState(false);
   const findWidgetOpenRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const { clearFindings } = useScanStore();
+
+  // ── Scanner callbacks ────────────────────────────────────────────────────
+  const getEditorText = useCallback(() => {
+    return leftEditorRef.current?.getValue() ?? '';
+  }, []);
+
+  const applyEdit = useCallback((newText: string) => {
+    applyEditToMonaco(leftEditorRef.current, newText);
+    window.setTimeout(updateOutput, 0);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1026,8 +1041,17 @@ export default function App() {
         </h1>
       </header>
 
-      <main className="grid grid-cols-2 flex-1 overflow-hidden bg-[#1e1e1e]">
-        <div className="flex flex-col overflow-hidden">
+      <motion.main
+        className="grid flex-1 overflow-hidden bg-[#1e1e1e]"
+        initial={false}
+        animate={{
+          gridTemplateColumns: scannerOpen
+            ? 'minmax(0, 1fr) minmax(0, 1fr) 220px'
+            : 'minmax(0, 1fr) minmax(0, 1fr) 0px',
+        }}
+        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex min-w-0 flex-col overflow-hidden">
           <div className="h-6 bg-[#252526] px-3 flex items-center justify-between z-10 shrink-0">
             <span className="text-[9px] text-[#888] font-bold uppercase tracking-wider">
               Input <span className="opacity-50">editable</span>
@@ -1068,12 +1092,22 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex flex-col bg-[#191919] overflow-hidden">
+        <div className="flex min-w-0 flex-col bg-[#191919] overflow-hidden">
           <div className="h-6 bg-[#252526] px-3 flex items-center justify-between z-10 shrink-0 relative">
             <span className="text-[9px] text-[#888] font-bold uppercase tracking-wider">
               Output <span className="opacity-30">read-only</span>
             </span>
             <div className="flex items-center gap-3">
+              <button
+                id="scanner-toggle-btn"
+                onClick={() => { setScannerOpen((o) => !o); if (scannerOpen) clearFindings(); }}
+                className={`relative flex h-5 items-center overflow-hidden text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                  scannerOpen ? 'text-[#e03131]' : 'text-[#aaa] hover:text-[#fff]'
+                }`}
+              >
+                <ScanLine className="w-3 h-3 mr-1" />
+                Scan
+              </button>
               <button
                 onClick={handleClear}
                 disabled={markers.length === 0}
@@ -1199,7 +1233,27 @@ export default function App() {
             />
           </div>
         </div>
-      </main>
+
+        {/* ── PII Scanner Panel ─────────────────────────────────────────── */}
+        <aside className="min-w-0 overflow-hidden">
+          <AnimatePresence initial={false}>
+            {scannerOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 12 }}
+                transition={{ duration: 0.14, ease: 'easeOut' }}
+                className="flex h-full w-[220px] flex-col overflow-hidden"
+              >
+                <ScannerPanel
+                  getEditorText={getEditorText}
+                  applyEdit={applyEdit}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </aside>
+      </motion.main>
     </div>
   );
 }
