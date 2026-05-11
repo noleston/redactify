@@ -5,7 +5,7 @@ import { Check, Copy, Trash2, Eraser, Shield, Type, Settings, ScanLine } from 'l
 import { motion, AnimatePresence } from 'motion/react';
 import rLogo from './assets/r_logo.svg';
 import ScannerPanel from './components/ScannerPanel';
-import { useScanStore } from './store/useScanStore';
+import { useScanStore, type Finding } from './store/useScanStore';
 import { applyEditToMonaco } from './lib/applyRedaction';
 
 
@@ -95,6 +95,8 @@ export default function App() {
     targetLeft: number;
     targetTop: number;
   }>({ frame: null, targetLeft: 0, targetTop: 0 });
+  const scannerHighlightIdsRef = useRef<string[]>([]);
+  const scannerHighlightTimerRef = useRef<number | null>(null);
   const { markers, addMarkers, clearMarkers, removeMarkers, fixedLength, strictMasking, setFixedLength, setStrictMasking, smartWordSnap, setSmartWordSnap } = useRedactionStore();
   const [toolbarBounds, setToolbarBounds] = useState<{ top: number, left: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -114,6 +116,52 @@ export default function App() {
   const applyEdit = useCallback((newText: string) => {
     applyEditToMonaco(leftEditorRef.current, newText);
     window.setTimeout(updateOutput, 0);
+  }, []);
+
+  const focusScannerFinding = useCallback((finding: Finding) => {
+    const editor = leftEditorRef.current;
+    const model = editor?.getModel();
+    const monacoApi = monacoRef.current;
+    if (!editor || !model || !monacoApi) return;
+
+    const startOffset = finding.startOffset ?? finding.index;
+    const length = finding.length ?? Math.max(0, (finding.endOffset ?? 0) - startOffset);
+    const endOffset = startOffset + length;
+
+    if (startOffset < 0 || length <= 0 || endOffset > model.getValueLength()) return;
+
+    const startPosition = model.getPositionAt(startOffset);
+    const endPosition = model.getPositionAt(endOffset);
+    const range = new monacoApi.Range(
+      startPosition.lineNumber,
+      startPosition.column,
+      endPosition.lineNumber,
+      endPosition.column
+    );
+
+    editor.setSelection(range);
+    editor.revealRangeInCenter(range, monacoApi.editor.ScrollType.Smooth);
+    editor.focus();
+
+    if (scannerHighlightTimerRef.current !== null) {
+      window.clearTimeout(scannerHighlightTimerRef.current);
+      scannerHighlightTimerRef.current = null;
+    }
+
+    scannerHighlightIdsRef.current = editor.deltaDecorations(scannerHighlightIdsRef.current, [
+      {
+        range,
+        options: {
+          inlineClassName: 'scanner-finding-flash',
+          stickiness: monacoApi.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        },
+      },
+    ]);
+
+    scannerHighlightTimerRef.current = window.setTimeout(() => {
+      scannerHighlightIdsRef.current = editor.deltaDecorations(scannerHighlightIdsRef.current, []);
+      scannerHighlightTimerRef.current = null;
+    }, 1100);
   }, []);
 
   useEffect(() => {
@@ -161,6 +209,9 @@ export default function App() {
       window.removeEventListener('keydown', handleGlobalKeyDown, true);
       if (copyResetTimer.current !== null) {
         window.clearTimeout(copyResetTimer.current);
+      }
+      if (scannerHighlightTimerRef.current !== null) {
+        window.clearTimeout(scannerHighlightTimerRef.current);
       }
     };
   }, []);
@@ -243,6 +294,8 @@ export default function App() {
     const domNode = editor.getDomNode();
     if (!domNode) return;
 
+    const FAST_SCROLL_MULTIPLIER = 4;
+
     const normalizeWheelDelta = (event: WheelEvent) => {
       const lineHeight = monacoRef.current
         ? editor.getOption?.(monacoRef.current.editor.EditorOption.lineHeight)
@@ -253,10 +306,11 @@ export default function App() {
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
           ? pageHeight
           : 1;
+      const speed = event.altKey ? FAST_SCROLL_MULTIPLIER : 1;
 
       return {
-        x: event.deltaX * multiplier,
-        y: event.deltaY * multiplier,
+        x: event.deltaX * multiplier * speed,
+        y: event.deltaY * multiplier * speed,
       };
     };
 
@@ -1248,6 +1302,7 @@ export default function App() {
                 <ScannerPanel
                   getEditorText={getEditorText}
                   applyEdit={applyEdit}
+                  onFocusFinding={focusScannerFinding}
                 />
               </motion.div>
             )}

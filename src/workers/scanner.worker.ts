@@ -27,6 +27,21 @@ type IndexedRegExpExecArray = RegExpExecArray & {
   indices?: Array<[number, number] | undefined>;
 };
 
+const RULE_PRIORITY: Record<string, number> = {
+  config_link_vpn: 100,
+  ssh_private_key_header: 95,
+  aws_secret_key: 90,
+  wireguard_private_key: 90,
+  reality_public_key: 90,
+  reality_short_id: 88,
+  proxy_password: 87,
+  proxy_username: 86,
+  yaml_docker_secret: 85,
+  uuid_vless_id: 80,
+  db_password_in_url: 80,
+  proxy_server_ip: 75,
+};
+
 function getEnd(finding: Pick<ScanFinding, 'index' | 'length'>): number {
   return finding.index + finding.length;
 }
@@ -40,6 +55,9 @@ function compareFindings(a: ScanFinding, b: ScanFinding): number {
 function pickLongest(findings: ScanFinding[]): ScanFinding {
   return findings.reduce((best, current) => {
     if (current.length !== best.length) return current.length > best.length ? current : best;
+    const bestPriority = RULE_PRIORITY[best.ruleId] ?? 0;
+    const currentPriority = RULE_PRIORITY[current.ruleId] ?? 0;
+    if (currentPriority !== bestPriority) return currentPriority > bestPriority ? current : best;
     return compareFindings(current, best) < 0 ? current : best;
   });
 }

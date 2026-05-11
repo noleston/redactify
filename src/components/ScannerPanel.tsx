@@ -30,10 +30,12 @@ interface ScannerPanelProps {
    * undo history is preserved. Receives the new full text.
    */
   applyEdit: (newText: string) => void;
+  /** Callback to reveal and briefly highlight a scanner finding in the editor */
+  onFocusFinding?: (finding: Finding) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function ScannerPanel({ getEditorText, applyEdit }: ScannerPanelProps) {
+export default function ScannerPanel({ getEditorText, applyEdit, onFocusFinding }: ScannerPanelProps) {
   const {
     isScanning, findings, selectedIds, strategy, error,
     startScan, clearFindings,
@@ -211,23 +213,39 @@ export default function ScannerPanel({ getEditorText, applyEdit }: ScannerPanelP
                 {/* Items */}
                 <div className="mt-0.5 space-y-px pl-1">
                   {items.map((finding) => (
-                    <button
+                    <div
                       key={finding.id}
-                      onClick={() => toggleSelection(finding.id)}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onFocusFinding?.(finding)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onFocusFinding?.(finding);
+                        }
+                      }}
                       className="w-full flex items-center gap-2 px-1.5 py-1 rounded hover:bg-[#2a2a2a] transition-colors text-left group"
                     >
                       {/* Item checkbox */}
-                      <div className={`w-3 h-3 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${
-                        selectedIds.has(finding.id)
-                          ? 'bg-[#e03131] border-[#e03131]'
-                          : 'border-[#444] group-hover:border-[#666]'
-                      }`}>
+                      <button
+                        type="button"
+                        aria-label={selectedIds.has(finding.id) ? `Deselect ${finding.label}` : `Select ${finding.label}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleSelection(finding.id);
+                        }}
+                        className={`w-3 h-3 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${
+                          selectedIds.has(finding.id)
+                            ? 'bg-[#e03131] border-[#e03131]'
+                            : 'border-[#444] group-hover:border-[#666]'
+                        }`}
+                      >
                         {selectedIds.has(finding.id) && (
                           <svg className="w-1.5 h-1.5 text-white" viewBox="0 0 10 10" fill="none">
                             <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
-                      </div>
+                      </button>
 
                       {/* Label + value */}
                       <div className="flex-1 min-w-0">
@@ -238,7 +256,7 @@ export default function ScannerPanel({ getEditorText, applyEdit }: ScannerPanelP
                           {finding.value}
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </motion.div>

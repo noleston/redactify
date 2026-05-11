@@ -17,6 +17,15 @@ export const SCORE_WEIGHTS = {
 
 export const SCORE_THRESHOLD = 70;
 
+const AUTHORITATIVE_INFRA_RULE_IDS = new Set([
+  'aws_secret_key',
+  'config_link_vpn',
+  'reality_public_key',
+  'reality_short_id',
+  'wireguard_private_key',
+  'ssh_private_key_header',
+]);
+
 export const NEGATIVE_KEYWORDS = [
   'test',
   'example',
@@ -54,6 +63,38 @@ function getPositiveContext(text: string, index: number, length: number, rule: P
   return text.slice(start, end).toLowerCase();
 }
 
+function getAuthoritativeInfraEvidence(rule: PiiRule, value: string): ScoreEvidence | null {
+  if (rule.id === 'config_link_vpn' && /^(?:vless|vmess|ss|trojan|clash|amnezia):\/\//iu.test(value)) {
+    return { reason: 'Authoritative VPN config link signature', points: 100 };
+  }
+
+  if (rule.id === 'aws_secret_key' && /^[A-Za-z0-9/+=_-]{20,60}$/u.test(value)) {
+    return { reason: 'Authoritative AWS secret key signature', points: 100 };
+  }
+
+  if (rule.id === 'wireguard_private_key' && /^[A-Za-z0-9+/]{42,44}=$/u.test(value)) {
+    return { reason: 'Authoritative WireGuard private key signature', points: 100 };
+  }
+
+  if (rule.id === 'reality_public_key' && /^[A-Za-z0-9_-]{32,64}$/u.test(value)) {
+    return { reason: 'Authoritative Reality public key signature', points: 100 };
+  }
+
+  if (rule.id === 'reality_short_id' && /^[0-9a-f]{2,16}$/iu.test(value)) {
+    return { reason: 'Authoritative Reality short-id signature', points: 100 };
+  }
+
+  if (rule.id === 'ssh_private_key_header' && /^-----BEGIN [A-Z ]+ PRIVATE KEY-----$/u.test(value)) {
+    return { reason: 'Authoritative private key header signature', points: 100 };
+  }
+
+  if (AUTHORITATIVE_INFRA_RULE_IDS.has(rule.id)) {
+    return { reason: 'Authoritative infrastructure secret signature', points: 100 };
+  }
+
+  return null;
+}
+
 export function calculateScore(
   value: string,
   index: number,
@@ -71,6 +112,14 @@ export function calculateScore(
     };
   }
 
+  const authoritativeEvidence = getAuthoritativeInfraEvidence(rule, value);
+  if (authoritativeEvidence) {
+    return {
+      score: authoritativeEvidence.points,
+      debug: [authoritativeEvidence],
+    };
+  }
+
   score += SCORE_WEIGHTS.PATTERN_MATCH;
   debug.push({ reason: 'Regex pattern matched', points: SCORE_WEIGHTS.PATTERN_MATCH });
 
@@ -79,7 +128,7 @@ export function calculateScore(
     debug.push({ reason: 'Validation function passed', points: SCORE_WEIGHTS.VALIDATION_SUCCESS });
   }
 
-  const contextWindow = text.slice(Math.max(0, index - 50), index + length + 50).toLowerCase();
+  const contextWindow = getPositiveContext(text, index, length, rule, 50);
   let hasNegativeContext = false;
 
   for (const keyword of NEGATIVE_KEYWORDS) {
@@ -94,26 +143,25 @@ export function calculateScore(
   const nearContext = getPositiveContext(text, index, length, rule, 20);
   const farContext = getPositiveContext(text, index, length, rule, 50);
   let contextScore = 0;
+  let contextEvidence: ScoreEvidence | null = null;
 
   for (const trigger of rule.mustHaveContext) {
     const triggerLower = trigger.toLowerCase();
 
     if (nearContext.includes(triggerLower)) {
       contextScore = SCORE_WEIGHTS.CONTEXT_NEAR;
-      debug.push({ reason: `Direct context near: "${trigger}"`, points: SCORE_WEIGHTS.CONTEXT_NEAR });
+      contextEvidence = { reason: `Direct context near: "${trigger}"`, points: SCORE_WEIGHTS.CONTEXT_NEAR };
       break;
     }
 
-    if (farContext.includes(triggerLower)) {
+    if (contextScore < SCORE_WEIGHTS.CONTEXT_FAR && farContext.includes(triggerLower)) {
       contextScore = SCORE_WEIGHTS.CONTEXT_FAR;
-      debug.push({ reason: `Direct context far: "${trigger}"`, points: SCORE_WEIGHTS.CONTEXT_FAR });
-      break;
+      contextEvidence = { reason: `Direct context far: "${trigger}"`, points: SCORE_WEIGHTS.CONTEXT_FAR };
     }
 
-    if (hasFuzzyContext(triggerLower, farContext)) {
+    if (contextScore < SCORE_WEIGHTS.FUZZY_CONTEXT && hasFuzzyContext(triggerLower, farContext)) {
       contextScore = SCORE_WEIGHTS.FUZZY_CONTEXT;
-      debug.push({ reason: `Fuzzy context match: "${trigger}"`, points: SCORE_WEIGHTS.FUZZY_CONTEXT });
-      break;
+      contextEvidence = { reason: `Fuzzy context match: "${trigger}"`, points: SCORE_WEIGHTS.FUZZY_CONTEXT };
     }
   }
 
@@ -129,6 +177,7 @@ export function calculateScore(
   }
 
   score += contextScore;
+  if (contextEvidence) debug.push(contextEvidence);
 
   return { score, debug };
 }

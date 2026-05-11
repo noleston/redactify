@@ -22,6 +22,27 @@
   display: none !important;
 }
 
+.monaco-editor .scanner-finding-flash {
+  animation: scanner-finding-flash 1.05s ease-out forwards;
+  background-color: rgba(224, 49, 49, 0.38);
+  border-radius: 2px;
+}
+
+@keyframes scanner-finding-flash {
+  0% {
+    background-color: rgba(224, 49, 49, 0.52);
+    box-shadow: 0 0 0 1px rgba(224, 49, 49, 0.78) inset;
+  }
+  55% {
+    background-color: rgba(224, 49, 49, 0.26);
+    box-shadow: 0 0 0 1px rgba(224, 49, 49, 0.34) inset;
+  }
+  100% {
+    background-color: rgba(224, 49, 49, 0);
+    box-shadow: 0 0 0 1px rgba(224, 49, 49, 0) inset;
+  }
+}
+
 .monaco-editor .find-widget {
   border-top: 1px solid var(--vscode-widget-border);
   border-radius: 4px;
