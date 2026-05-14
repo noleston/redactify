@@ -9,15 +9,17 @@ import { useScanStore, type Finding } from './store/useScanStore';
 import { applyEditToMonaco } from './lib/applyRedaction';
 
 
+const BLACKOUT_CHAR = '█';
+
 const getReplacementText = (originalText: string, replacementType: string, fixedLength: boolean, strictMasking: boolean) => {
   const parts = originalText.split(/(\r?\n)/);
   return parts.map((part: string) => {
     if (part.match(/\r?\n/)) return part;
     if (!part) return part;
     if (replacementType === 'blackout') {
-      if (fixedLength) return '████████';
-      if (strictMasking) return '█'.repeat(part.length);
-      return part.replace(/[^\t ]/g, '█');
+      if (fixedLength) return BLACKOUT_CHAR.repeat(8);
+      if (strictMasking) return BLACKOUT_CHAR.repeat(part.length);
+      return part.replace(/[^\t ]/g, BLACKOUT_CHAR);
     } else if (replacementType === 'empty') {
       return '';
     } else if (replacementType === 'redacted') {
@@ -30,6 +32,26 @@ const getReplacementText = (originalText: string, replacementType: string, fixed
 
 const hasNonEmptySelection = (selections: any[] | null | undefined) =>
   !!selections?.some((selection: any) => !selection.isEmpty());
+
+const addBlackoutRuns = (text: string, baseOffset: number, spans: Array<{ start: number; end: number }>) => {
+  let runStart = -1;
+
+  for (let index = 0; index < text.length; index++) {
+    if (text[index] === BLACKOUT_CHAR) {
+      if (runStart === -1) runStart = index;
+      continue;
+    }
+
+    if (runStart !== -1) {
+      spans.push({ start: baseOffset + runStart, end: baseOffset + index });
+      runStart = -1;
+    }
+  }
+
+  if (runStart !== -1) {
+    spans.push({ start: baseOffset + runStart, end: baseOffset + text.length });
+  }
+};
 
 const comparePositions = (a: any, b: any) => {
   if (a.lineNumber !== b.lineNumber) return a.lineNumber - b.lineNumber;
@@ -89,6 +111,7 @@ export default function App() {
   const isSelectingRight = useRef(false);
   const isSnappingSelection = useRef(false);
   const isUpdatingOutput = useRef(false);
+  const isMouseButtonDown = useRef(false);
   const copyResetTimer = useRef<number | null>(null);
   const smoothScrollRef = useRef<{
     frame: number | null;
@@ -97,6 +120,8 @@ export default function App() {
   }>({ frame: null, targetLeft: 0, targetTop: 0 });
   const scannerHighlightIdsRef = useRef<string[]>([]);
   const scannerHighlightTimerRef = useRef<number | null>(null);
+  const outputBlackoutDecorationIdsRef = useRef<string[]>([]);
+  const outputBlackoutSpansRef = useRef<Array<{ start: number; end: number }>>([]);
   const { markers, addMarkers, clearMarkers, removeMarkers, fixedLength, strictMasking, setFixedLength, setStrictMasking, smartWordSnap, setSmartWordSnap } = useRedactionStore();
   const [toolbarBounds, setToolbarBounds] = useState<{ top: number, left: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -204,9 +229,11 @@ export default function App() {
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown, true);
+    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown, true);
+      window.removeEventListener('mouseup', handleMouseUp);
       if (copyResetTimer.current !== null) {
         window.clearTimeout(copyResetTimer.current);
       }
@@ -214,6 +241,10 @@ export default function App() {
         window.clearTimeout(scannerHighlightTimerRef.current);
       }
     };
+
+    function handleMouseUp() {
+      isMouseButtonDown.current = false;
+    }
   }, []);
 
   const handleEditorWillMount = (monaco: any) => {
@@ -692,7 +723,15 @@ export default function App() {
       isSyncingLeft.current = false;
     });
 
+    editor.onMouseDown((e: any) => {
+      if (e.event?.leftButton) {
+        isMouseButtonDown.current = true;
+      }
+    });
+
     editor.onMouseUp((e: any) => {
+      isMouseButtonDown.current = false;
+
       if (isMonacoFindWidgetVisible()) {
         setFindWidgetState(true);
         return;
@@ -732,7 +771,7 @@ export default function App() {
       if (!hasNonEmptySelection(editor.getSelections())) {
         setToolbarBounds(null);
       } else {
-        if (e.source !== 'mouse') {
+        if (e.source !== 'mouse' && !isMouseButtonDown.current) {
           const endPos = sel.getEndPosition();
           const scrolledVisiblePosition = editor.getScrolledVisiblePosition(endPos);
           if (scrolledVisiblePosition) {
@@ -759,6 +798,7 @@ export default function App() {
     rightEditorRef.current = editor;
     installSmoothWheelScroll(editor);
     installFindWidgetObserver(editor);
+    applyOutputBlackoutDecorations();
 
     editor.onDidChangeModelContent(() => {
       isUpdatingOutput.current = true;
@@ -797,6 +837,33 @@ export default function App() {
     });
   };
 
+  const applyOutputBlackoutDecorations = () => {
+    const editor = rightEditorRef.current;
+    const monacoApi = monacoRef.current;
+    const model = editor?.getModel();
+    if (!editor || !monacoApi || !model) return;
+
+    const decorations = outputBlackoutSpansRef.current
+      .filter((span) => span.end > span.start)
+      .map((span) => ({
+        range: new monacoApi.Range(
+          model.getPositionAt(span.start).lineNumber,
+          model.getPositionAt(span.start).column,
+          model.getPositionAt(span.end).lineNumber,
+          model.getPositionAt(span.end).column
+        ),
+        options: {
+          inlineClassName: 'redactify-blackout-run',
+          stickiness: monacoApi.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        },
+      }));
+
+    outputBlackoutDecorationIdsRef.current = editor.deltaDecorations(
+      outputBlackoutDecorationIdsRef.current,
+      decorations
+    );
+  };
+
   const updateOutput = () => {
     if (!leftEditorRef.current) return;
     const model = leftEditorRef.current.getModel();
@@ -805,30 +872,41 @@ export default function App() {
     const currentMarkers = useRedactionStore.getState().markers;
     const { fixedLength, strictMasking } = useRedactionStore.getState();
 
+    const sourceText = model.getValue();
     let textDetails = currentMarkers.map(m => {
       const range = model.getDecorationRange(m.id);
-      return { range, replacement: m.replacement, replacementType: m.replacementType, id: m.id };
-    }).filter(m => m.range && !m.range.isEmpty());
+      if (!range || range.isEmpty()) return null;
+      const startOffset = model.getOffsetAt(range.getStartPosition());
+      const endOffset = model.getOffsetAt(range.getEndPosition());
+      return { range, replacement: m.replacement, replacementType: m.replacementType, id: m.id, startOffset, endOffset };
+    }).filter((detail): detail is NonNullable<typeof detail> => detail !== null);
 
     textDetails.sort((a, b) => {
-      if (a.range.startLineNumber !== b.range.startLineNumber) {
-        return b.range.startLineNumber - a.range.startLineNumber; // from bottom
-      }
-      return b.range.startColumn - a.range.startColumn; // from right
+      return a.startOffset - b.startOffset;
     });
 
-    let newFullText = model.getValue();
+    let newFullText = '';
+    let sourceCursor = 0;
+    const outputBlackoutSpans: Array<{ start: number; end: number }> = [];
+
     textDetails.forEach(mod => {
-      if (!mod.range) return;
-      const originalText = model.getValueInRange(mod.range);
+      if (mod.startOffset < sourceCursor) return;
+
+      newFullText += sourceText.slice(sourceCursor, mod.startOffset);
+      const originalText = sourceText.slice(mod.startOffset, mod.endOffset);
       let dynamicReplacement = getReplacementText(originalText, mod.replacementType, fixedLength, strictMasking);
 
-      const startOffset = model.getOffsetAt({ lineNumber: mod.range.startLineNumber, column: mod.range.startColumn });
-      const endOffset = model.getOffsetAt({ lineNumber: mod.range.endLineNumber, column: mod.range.endColumn });
-      newFullText = newFullText.substring(0, startOffset) + dynamicReplacement + newFullText.substring(endOffset);
+      if (mod.replacementType === 'blackout') {
+        addBlackoutRuns(dynamicReplacement, newFullText.length, outputBlackoutSpans);
+      }
+
+      newFullText += dynamicReplacement;
+      sourceCursor = mod.endOffset;
     });
+    newFullText += sourceText.slice(sourceCursor);
 
     isUpdatingOutput.current = true;
+    outputBlackoutSpansRef.current = outputBlackoutSpans;
     setOutputText(newFullText);
     window.setTimeout(() => {
       isUpdatingOutput.current = false;
@@ -884,6 +962,10 @@ export default function App() {
   useEffect(() => {
     updateOutput();
   }, [markers, fixedLength, strictMasking]);
+
+  useEffect(() => {
+    applyOutputBlackoutDecorations();
+  }, [outputText]);
 
   const applyRedaction = (replacementType: 'blackout' | 'redacted' | 'empty' | 'custom', replacement: string) => {
     if (!leftEditorRef.current || !monacoRef.current) return;
@@ -1090,8 +1172,8 @@ export default function App() {
         )}
       </AnimatePresence>
       <header className="h-10 bg-[#252526] flex items-center justify-between px-4 shrink-0">
-        <h1 className="flex items-center">
-          <img src={rLogo} alt="Redactify Logo" className="h-[24px] opacity-100" />
+        <h1 className="flex items-center select-none" aria-label="Redactify">
+          <img src={rLogo} alt="Redactify Logo" draggable={false} className="h-[24px] opacity-100 select-none" />
         </h1>
       </header>
 

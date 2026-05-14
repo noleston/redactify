@@ -28,6 +28,14 @@
   border-radius: 2px;
 }
 
+.monaco-editor .redactify-blackout-run {
+  background-color: #cccccc;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
 @keyframes scanner-finding-flash {
   0% {
     background-color: rgba(224, 49, 49, 0.52);
