@@ -2,7 +2,11 @@
   <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" width="80%" />
 </p>
 
-<h2 align="center">Secure, browser-based text masking utility</h2>
+<div align="center">
+
+### Private, browser-based sensitive data masking
+
+</div>
 
 <p align="center">
 Sanitize logs, code, and documents without leaving your browser.<br />
