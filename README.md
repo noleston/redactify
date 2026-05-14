@@ -2,40 +2,44 @@
   <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" width="80%" />
 </p>
 
-<h3 align="center">A sleek, browser-based text redaction tool.</h3>
+<h2 align="center">Secure, browser-based text masking utility</h2>
 
 <p align="center">
-Paste any text, select sensitive fragments, and instantly preview the redacted result — side by side, in real time.
+Sanitize logs, code, and documents without leaving your browser.<br />
+No data egress, no telemetry, just pure client-side processing.
 </p>
 
 <p align="center">
-Built with React, Monaco Editor, and Vite.
+  <img src="https://img.shields.io/badge/Client--side_only-D30000?style=flat-square&logo=letsencrypt&logoColor=white" alt="Execution" />
+  <img src="https://img.shields.io/badge/React-D30000?style=flat-square&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-D30000?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Monaco_Editor-D30000?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xNy4xIDIuM0w4LjIgMTAuNkwzLjcgNy4yTDIgOC4xVjE1LjlsMS43LjkgNC41LTMuNCA4LjkgOC4zIDQuOS0yVjQuM0wxNy4xIDIuM3pNMTYuOCA3LjR2OS4yTDEwLjkgMTJsNS45LTQuNnoiLz48L3N2Zz4=" alt="Monaco" />
 </p>
-
 
 
 ## Why Redactify?
 
-Redactify is a lightweight, browser-based text redaction tool designed for fast and precise removal of sensitive information.
+Redactify is a utility designed for fast and secure removal of sensitive information from logs, code, or documents. 
 
-Everything runs locally in your browser — no uploads, no servers, no data leaving your device.
-
+I built this to solve a specific problem: masking API keys and PII without ever sending data to a third-party server. Everything runs locally in your browser memory — no data leaves your device.
 
 
 ## Features
 
-- **Dual-pane editor** — original text on the left, live redacted preview on the right  
-- **Multiple redaction styles** — blackout (`████`), `[REDACTED]`, or full removal  
-- **Smart word snapping** — selections automatically expand to word boundaries  
-- **Strict masking mode** — character-preserving redaction for consistent layout  
-- **Keyboard shortcuts**
-  - `Ctrl + B` — blackout selection  
-  - `Ctrl + Backspace` — remove selection  
-  - `Ctrl + Z` — undo redaction  
-- **One-click copy** — instantly copy final output  
-- **Find & Replace** — full Monaco-powered search in both panes  
-- **Dark UI** — minimal VS Code–inspired interface with red accents  
+- **Dual-pane engine** — Original text on the left, character-preserving preview on the right.
+- **Privacy by Design** — Zero network requests. No analytics. No telemetry.
+- **Smart Selection** — Automatic word-boundary snapping for precise masking.
+- **Monaco-powered** — Full search, replace, and navigation using the VS Code editor engine.
+- **Export** — One-click copy to clipboard.
 
+### Keyboard Shortcuts
+
+| Action | Shortcut | Result |
+| :--- | :--- | :--- |
+| **Blackout** | `Ctrl + B` | Replace with `█` blocks |
+| **Remove** | `Ctrl + Backspace` | Delete selection from output |
+| **Undo** | `Ctrl + Z` | Revert last redaction |
+| **Search** | `Ctrl + F` | Global search and replace |
 
 
 ## Preview
@@ -43,7 +47,6 @@ Everything runs locally in your browser — no uploads, no servers, no data leav
 <p align="center">
   <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-bg.png" width="100%" />
 </p>
-
 
 
 ## Quick Start
