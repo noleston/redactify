@@ -58,7 +58,7 @@ I built it to solve a specific problem: masking API keys and PII without ever se
 </p>
 
 
-## Quick Start
+### Quick Start
 
 ```bash
 npm install
