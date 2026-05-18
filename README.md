@@ -24,9 +24,9 @@ No data egress, no telemetry, just pure client-side processing.
 
 ## Why Redactify?
 
-Redactify is a utility designed for fast and secure removal of sensitive information from logs, code, or documents. 
+**[Redactify](https://github.com/noleston/redactify)** is a utility designed for fast and secure removal of sensitive information from logs, code, or documents.
 
-I built this to solve a specific problem: masking API keys and PII without ever sending data to a third-party server. Everything runs locally in your browser memory — no data leaves your device.
+I built it to solve a specific problem: masking API keys and PII without ever sending data to a third-party server. Everything runs locally in your browser memory, no data leaves your device.
 
 
 ### Features
