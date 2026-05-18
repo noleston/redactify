@@ -29,25 +29,29 @@ Redactify is a utility designed for fast and secure removal of sensitive informa
 I built this to solve a specific problem: masking API keys and PII without ever sending data to a third-party server. Everything runs locally in your browser memory — no data leaves your device.
 
 
-## Features
+### Features
 
-- **Dual-pane engine** — Original text on the left, character-preserving preview on the right.
-- **Privacy by Design** — Zero network requests. No analytics. No telemetry.
-- **Smart Selection** — Automatic word-boundary snapping for precise masking.
-- **Monaco-powered** — Full search, replace, and navigation using the VS Code editor engine.
-- **Export** — One-click copy to clipboard.
+| Feature | Description |
+| :--- | :--- |
+| **Dual-pane editor** | Original input on the left, redacted output on the right |
+| **Character-preserving masking** | Replace sensitive text with block characters while keeping structure readable |
+| **Smart selection** | Snaps selections to word boundaries for cleaner redactions |
+| **Monaco Editor** | Search, replace, navigation, and editor behavior powered by the VS Code editor engine |
+| **Undo support** | Revert the last redaction quickly |
+| **Clipboard export** | Copy the sanitized output in one click |
+| **Zero network processing** | All masking happens in browser memory |
 
 ### Keyboard Shortcuts
 
 | Action | Shortcut | Result |
 | :--- | :--- | :--- |
-| **Blackout** | `Ctrl + B` | Replace with `█` blocks |
-| **Remove** | `Ctrl + Backspace` | Delete selection from output |
-| **Undo** | `Ctrl + Z` | Revert last redaction |
-| **Search** | `Ctrl + F` | Global search and replace |
+| **Blackout** | `Ctrl + B` | Replace selection with `█` blocks |
+| **Remove** | `Ctrl + Backspace` | Delete selection from the output |
+| **Undo** | `Ctrl + Z` | Revert the last redaction |
+| **Search** | `Ctrl + F` | Search inside the editor |
 
 
-## Preview
+### Preview
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-bg.png" width="100%" />
