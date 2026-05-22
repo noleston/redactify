@@ -47,11 +47,11 @@ Everything runs locally in your browser memory via Web Workers, ensuring no data
 
 | Category | Detected Entities | Validations & Context Details |
 | :--- | :--- | :--- |
-| 🔑 **Credentials** | JWT Tokens, AWS Secret Access Keys, Database Passwords (in URLs), Proxy Usernames & Passwords, Generic Passwords, UUID / Client IDs, WireGuard Private Keys, Reality Public Keys & Short IDs, Config/YAML Docker Secrets, SSH Private Key Blocks. | Validation checks (looksLikeSecret logic), specific proxy/VPN context filtering. |
-| 👤 **Identity** | Person Names (Russian ФИО patterns), Passport (RU) numbers, INN (RU), SNILS (RU), Date of Birth. | INN/SNILS checksum verification, Russian grammar context detection. |
-| 💳 **Financial** | Credit Cards (Visa, Mastercard, Amex, etc.), Bank Accounts (20-digit), Routing Numbers (9-digit), Financial Last 4. | Luhn algorithm verification for credit cards. |
-| 📞 **Contact** | Emails, Phone Numbers (RU & US formats), Russian Residential Addresses. | Address trigger phrase anchoring, mail transport protocol headers detection. |
-| 🌐 **Network** | IPv4 Addresses, Proxy Server IPs, VPN Config Links (`vless://`, `vmess://`, `ss://`, `trojan://`, `clash://`, `amnezia://`). | VPN link structure mapping. |
+| **Credentials** | JWT Tokens, AWS Secret Access Keys, Database Passwords (in URLs), Proxy Usernames & Passwords, Generic Passwords, UUID / Client IDs, WireGuard Private Keys, Reality Public Keys & Short IDs, Config/YAML Docker Secrets, SSH Private Key Blocks. | Validation checks (looksLikeSecret logic), specific proxy/VPN context filtering. |
+| **Identity** | Person Names (Russian ФИО patterns), Passport (RU) numbers, INN (RU), SNILS (RU), Date of Birth. | INN/SNILS checksum verification, Russian grammar context detection. |
+| **Financial** | Credit Cards (Visa, Mastercard, Amex, etc.), Bank Accounts (20-digit), Routing Numbers (9-digit), Financial Last 4. | Luhn algorithm verification for credit cards. |
+| **Contact** | Emails, Phone Numbers (RU & US formats), Russian Residential Addresses. | Address trigger phrase anchoring, mail transport protocol headers detection. |
+| **Network** | IPv4 Addresses, Proxy Server IPs, VPN Config Links (`vless://`, `vmess://`, `ss://`, `trojan://`, `clash://`, `amnezia://`). | VPN link structure mapping. |
 
 
 ## Keyboard Shortcuts
