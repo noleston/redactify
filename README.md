@@ -50,14 +50,6 @@ I built it to solve a specific problem: masking API keys and PII without ever se
 | **Undo** | `Ctrl + Z` | Revert the last redaction |
 | **Search** | `Ctrl + F` | Search inside the editor |
 
-
-### Preview
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-bg.png" width="100%" />
-</p>
-
-
 ### Quick Start
 
 ```bash
