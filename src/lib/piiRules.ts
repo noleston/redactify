@@ -17,6 +17,7 @@ export interface PiiRule {
   mustHaveContext: string[];
   strictContext?: boolean;
   validate?: (value: string) => boolean;
+  negativeContext?: string[];
 }
 
 function onlyDigits(value: string): string {
@@ -336,15 +337,67 @@ export const PII_RULES: PiiRule[] = [
     pattern: /\b((?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d))\b/gud,
     captureGroup: 1,
     mustHaveContext: ['ip', 'ipv4', 'host', 'server', 'address', 'адрес', 'сервер', 'endpoint', 'node', 'peer', 'remote', 'target'],
+    negativeContext: ['nameserver', 'dns', 'fallback', 'stun'],
+    validate: (ip) => {
+      const ignored = new Set(['0.0.0.0', '127.0.0.1', '1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4', '1.2.3.4']);
+      if (ignored.has(ip)) return false;
+      if (ip.startsWith('127.')) return false;
+      return true;
+    },
   },
   {
-    id: 'proxy_server_ip',
+    id: 'proxy_server_address',
     category: 'NETWORK',
-    label: 'Proxy Server IP',
-    pattern: /(?:^|[\n\r])\s*(?:server|host|endpoint|remote)\s*:\s*["']?((?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d))["']?/giud,
+    label: 'Proxy Server Address',
+    pattern: /(?:^|[\n\r])\s*(?:server|host|endpoint|remote)\s*:\s*["']?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{1,3}(?:\.\d{1,3}){3})["']?/giud,
     captureGroup: 1,
-    mustHaveContext: ['server', 'host', 'endpoint', 'remote', 'proxy', 'mihomo', 'clash', 'http', 'socks'],
-    strictContext: true,
+    mustHaveContext: ['server', 'host', 'endpoint', 'remote', 'proxy', 'mihomo', 'clash', 'http', 'socks', 'vless', 'vmess', 'trojan'],
+    strictContext: false,
+  },
+  {
+    id: 'reality_server_name',
+    category: 'NETWORK',
+    label: 'Reality Server Name / SNI',
+    pattern: /(?:server[-_\s]?names?|sni)[\s:=\[\],'"-]+([a-z0-9.-]+\.[a-z]{2,})/giud,
+    captureGroup: 1,
+    mustHaveContext: ['servernames', 'servername', 'sni', 'reality', 'xray', 'tls'],
+    strictContext: false,
+  },
+  {
+    id: 'reality_dest_port',
+    category: 'NETWORK',
+    label: 'Dest Port',
+    pattern: /(?:dest|(?<![-\w])port)[\s:="']+([1-9][0-9]{0,4})["']?/giud,
+    captureGroup: 1,
+    mustHaveContext: ['dest', 'port', 'reality', 'vless', 'xray'],
+    strictContext: false,
+  },
+  {
+    id: 'reality_short_id',
+    category: 'CREDENTIALS',
+    label: 'Reality Short ID',
+    pattern: /(?:short[-_\s]?ids?)[\s:=\[\],'"-]+([a-f0-9]{2,16})/giud,
+    captureGroup: 1,
+    mustHaveContext: ['shortids', 'shortid', 'reality', 'xray'],
+    strictContext: false,
+  },
+  {
+    id: 'reality_public_key',
+    category: 'CREDENTIALS',
+    label: 'Reality Public Key',
+    pattern: /(?:public[-_\s]?keys?)[\s:=\[\],'"-]+([A-Za-z0-9_-]{32,64})/giud,
+    captureGroup: 1,
+    mustHaveContext: ['publickey', 'reality', 'xray'],
+    strictContext: false,
+  },
+  {
+    id: 'xray_private_key',
+    category: 'CREDENTIALS',
+    label: 'Xray Private Key',
+    pattern: /(?:private[-_\s]?keys?)[\s:="']+([A-Za-z0-9_-]{42,44}=?)["']?/giud,
+    captureGroup: 1,
+    mustHaveContext: ['privatekey', 'xray', 'reality'],
+    strictContext: false,
   },
   {
     id: 'config_link_vpn',

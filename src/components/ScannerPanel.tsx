@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Scan, Loader2, ShieldAlert, ChevronDown, TriangleAlert } from 'lucide-react';
 import { useScanStore, type Finding, type RedactionStrategy } from '../store/useScanStore';
@@ -44,6 +44,16 @@ export default function ScannerPanel({ getEditorText, applyEdit, onFocusFinding 
   } = useScanStore();
 
   const strategyRef = useRef<HTMLSelectElement>(null);
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<PiiCategory>>(new Set());
+  const toggleGroupCollapse = (cat: PiiCategory) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
 
   // ── Group findings by category ─────────────────────────────────────────────
   const grouped = useMemo(() => {
@@ -207,11 +217,17 @@ export default function ScannerPanel({ getEditorText, applyEdit, onFocusFinding 
                     {CATEGORY_LABELS[cat]}
                   </span>
                   <span className="ml-auto text-[10px] text-[#555]">{items.length}</span>
-                  <ChevronDown className="w-3 h-3 text-[#444]" />
+                  <div
+                    onClick={(e) => { e.stopPropagation(); toggleGroupCollapse(cat); }}
+                    className="p-0.5 rounded hover:bg-[#333] transition-colors cursor-pointer"
+                  >
+                    <ChevronDown className={`w-3 h-3 text-[#444] transition-transform ${collapsedGroups.has(cat) ? '-rotate-90' : ''}`} />
+                  </div>
                 </button>
 
                 {/* Items */}
-                <div className="mt-0.5 space-y-px pl-1">
+                {!collapsedGroups.has(cat) && (
+                  <div className="mt-0.5 space-y-px pl-1">
                   {items.map((finding) => (
                     <div
                       key={finding.id}
@@ -259,6 +275,7 @@ export default function ScannerPanel({ getEditorText, applyEdit, onFocusFinding 
                     </div>
                   ))}
                 </div>
+                )}
               </motion.div>
             );
           })}

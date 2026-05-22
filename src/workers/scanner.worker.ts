@@ -52,39 +52,22 @@ function compareFindings(a: ScanFinding, b: ScanFinding): number {
   return a.ruleId.localeCompare(b.ruleId);
 }
 
-function pickLongest(findings: ScanFinding[]): ScanFinding {
-  return findings.reduce((best, current) => {
-    if (current.length !== best.length) return current.length > best.length ? current : best;
-    const bestPriority = RULE_PRIORITY[best.ruleId] ?? 0;
-    const currentPriority = RULE_PRIORITY[current.ruleId] ?? 0;
-    if (currentPriority !== bestPriority) return currentPriority > bestPriority ? current : best;
-    return compareFindings(current, best) < 0 ? current : best;
-  });
-}
-
 function removeOverlaps(findings: ScanFinding[]): ScanFinding[] {
-  const sorted = [...findings].sort(compareFindings);
-  if (sorted.length === 0) return [];
+  const sorted = [...findings].sort((a, b) => {
+    const aPri = RULE_PRIORITY[a.ruleId] ?? 0;
+    const bPri = RULE_PRIORITY[b.ruleId] ?? 0;
+    if (aPri !== bPri) return bPri - aPri;
+    if (a.length !== b.length) return b.length - a.length;
+    return a.index - b.index;
+  });
 
   const resolved: ScanFinding[] = [];
-  let cluster: ScanFinding[] = [sorted[0]];
-  let clusterEnd = getEnd(sorted[0]);
-
-  for (let i = 1; i < sorted.length; i++) {
-    const current = sorted[i];
-
-    if (current.index < clusterEnd) {
-      cluster.push(current);
-      clusterEnd = Math.max(clusterEnd, getEnd(current));
-      continue;
-    }
-
-    resolved.push(pickLongest(cluster));
-    cluster = [current];
-    clusterEnd = getEnd(current);
+  for (const current of sorted) {
+    const end = getEnd(current);
+    const hasOverlap = resolved.some(r => current.index < getEnd(r) && end > r.index);
+    if (!hasOverlap) resolved.push(current);
   }
 
-  resolved.push(pickLongest(cluster));
   return resolved.sort(compareFindings);
 }
 

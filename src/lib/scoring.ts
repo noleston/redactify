@@ -6,6 +6,11 @@ export interface ScoreEvidence {
   points: number;
 }
 
+export const CONTEXT_RADII = {
+  NEAR: 40,
+  FAR: 100,
+};
+
 export const SCORE_WEIGHTS = {
   PATTERN_MATCH: 50,
   VALIDATION_SUCCESS: 50,
@@ -23,6 +28,7 @@ const AUTHORITATIVE_INFRA_RULE_IDS = new Set([
   'reality_public_key',
   'reality_short_id',
   'wireguard_private_key',
+  'xray_private_key',
   'ssh_private_key_header',
 ]);
 
@@ -38,7 +44,7 @@ export const NEGATIVE_KEYWORDS = [
 ];
 
 function hasFuzzyContext(trigger: string, context: string): boolean {
-  if (trigger.length <= 4) return false;
+  if (trigger.length <= 4 || trigger.includes(' ')) return false;
 
   const wordsInContext = context.split(/[\s,.:;!?]+/u).filter(Boolean);
 
@@ -80,6 +86,10 @@ function getAuthoritativeInfraEvidence(rule: PiiRule, value: string): ScoreEvide
     return { reason: 'Authoritative Reality public key signature', points: 100 };
   }
 
+  if (rule.id === 'xray_private_key' && /^[A-Za-z0-9_-]{42,44}=?$/u.test(value)) {
+    return { reason: 'Authoritative Xray private key signature', points: 100 };
+  }
+
   if (rule.id === 'reality_short_id' && /^[0-9a-f]{2,16}$/iu.test(value)) {
     return { reason: 'Authoritative Reality short-id signature', points: 100 };
   }
@@ -105,6 +115,13 @@ export function calculateScore(
   const debug: ScoreEvidence[] = [];
   let score = 0;
 
+  if (/^█+$/.test(value) || /^\[[A-Z0-9_]+(?:-\d+)?\]$/.test(value) || !/[a-zA-Z0-9А-Яа-я]/u.test(value)) {
+    return {
+      score: 0,
+      debug: [{ reason: 'Value is already redacted', points: 0 }],
+    };
+  }
+
   if (rule.validate && !rule.validate(value)) {
     return {
       score: 0,
@@ -128,7 +145,7 @@ export function calculateScore(
     debug.push({ reason: 'Validation function passed', points: SCORE_WEIGHTS.VALIDATION_SUCCESS });
   }
 
-  const contextWindow = getPositiveContext(text, index, length, rule, 50);
+  const contextWindow = getPositiveContext(text, index, length, rule, CONTEXT_RADII.FAR);
   let hasNegativeContext = false;
 
   for (const keyword of NEGATIVE_KEYWORDS) {
@@ -140,8 +157,19 @@ export function calculateScore(
     }
   }
 
-  const nearContext = getPositiveContext(text, index, length, rule, 20);
-  const farContext = getPositiveContext(text, index, length, rule, 50);
+  if (rule.negativeContext && !hasNegativeContext) {
+    for (const keyword of rule.negativeContext) {
+      if (contextWindow.includes(keyword)) {
+        score += SCORE_WEIGHTS.NEGATIVE_CONTEXT;
+        debug.push({ reason: `Rule negative context found: "${keyword}"`, points: SCORE_WEIGHTS.NEGATIVE_CONTEXT });
+        hasNegativeContext = true;
+        break;
+      }
+    }
+  }
+
+  const nearContext = getPositiveContext(text, index, length, rule, CONTEXT_RADII.NEAR);
+  const farContext = getPositiveContext(text, index, length, rule, CONTEXT_RADII.FAR);
   let contextScore = 0;
   let contextEvidence: ScoreEvidence | null = null;
 
@@ -157,9 +185,7 @@ export function calculateScore(
     if (contextScore < SCORE_WEIGHTS.CONTEXT_FAR && farContext.includes(triggerLower)) {
       contextScore = SCORE_WEIGHTS.CONTEXT_FAR;
       contextEvidence = { reason: `Direct context far: "${trigger}"`, points: SCORE_WEIGHTS.CONTEXT_FAR };
-    }
-
-    if (contextScore < SCORE_WEIGHTS.FUZZY_CONTEXT && hasFuzzyContext(triggerLower, farContext)) {
+    } else if (contextScore < SCORE_WEIGHTS.FUZZY_CONTEXT && hasFuzzyContext(triggerLower, farContext)) {
       contextScore = SCORE_WEIGHTS.FUZZY_CONTEXT;
       contextEvidence = { reason: `Fuzzy context match: "${trigger}"`, points: SCORE_WEIGHTS.FUZZY_CONTEXT };
     }
