@@ -21,7 +21,6 @@ No data egress, no telemetry, just pure client-side processing.
   <img src="https://img.shields.io/badge/license-MIT-D30000?style=flat-square&logo=github&logoColor=white" alt="License" />
 </p>
 
----
 
 ## Why Redactify?
 
@@ -29,7 +28,6 @@ No data egress, no telemetry, just pure client-side processing.
 
 Everything runs locally in your browser memory via Web Workers, ensuring no data ever leaves your device. No analytics, no telemetry, no cloud API calls.
 
----
 
 ## Core Features
 
@@ -44,19 +42,17 @@ Everything runs locally in your browser memory via Web Workers, ensuring no data
   - **Tag / Pseudonymize**: Generates persistent identifiers per unique entity (e.g. `[EMAIL-1]`, `[JWT_TOKEN-1]`).
 - **Undo / History Support**: Full `Ctrl + Z` history support for both editor text updates and custom manual redactions.
 
----
 
 ## Supported PII Categories & Rules
 
 | Category | Detected Entities | Validations & Context Details |
 | :--- | :--- | :--- |
-| 🔑 **Credentials** | JWT Tokens, AWS Secret Access Keys, Database Passwords (in URLs), Proxy Usernames & Passwords, Generic Passwords, UUID / Client IDs, WireGuard Private Keys, Reality Public Keys & Short IDs, Config/YAML Docker Secrets, SSH Private Key Blocks. | Validation checks (looksLikeSecret logic), specific proxy/VPN context filtering. |
-| 👤 **Identity** | Person Names (Russian ФИО patterns), Passport (RU) numbers, INN (RU), SNILS (RU), Date of Birth. | INN/SNILS checksum verification, Russian grammar context detection. |
-| 💳 **Financial** | Credit Cards (Visa, Mastercard, Amex, etc.), Bank Accounts (20-digit), Routing Numbers (9-digit), Financial Last 4. | Luhn algorithm verification for credit cards. |
-| 📞 **Contact** | Emails, Phone Numbers (RU & US formats), Russian Residential Addresses. | Address trigger phrase anchoring, mail transport protocol headers detection. |
-| 🌐 **Network** | IPv4 Addresses, Proxy Server IPs, VPN Config Links (`vless://`, `vmess://`, `ss://`, `trojan://`, `clash://`, `amnezia://`). | VPN link structure mapping. |
+| **Credentials** | JWT Tokens, AWS Secret Access Keys, Database Passwords (in URLs), Proxy Usernames & Passwords, Generic Passwords, UUID / Client IDs, WireGuard Private Keys, Reality Public Keys & Short IDs, Config/YAML Docker Secrets, SSH Private Key Blocks. | Validation checks (looksLikeSecret logic), specific proxy/VPN context filtering. |
+| **Identity** | Person Names (Russian ФИО patterns), Passport (RU) numbers, INN (RU), SNILS (RU), Date of Birth. | INN/SNILS checksum verification, Russian grammar context detection. |
+| **Financial** | Credit Cards (Visa, Mastercard, Amex, etc.), Bank Accounts (20-digit), Routing Numbers (9-digit), Financial Last 4. | Luhn algorithm verification for credit cards. |
+| **Contact** | Emails, Phone Numbers (RU & US formats), Russian Residential Addresses. | Address trigger phrase anchoring, mail transport protocol headers detection. |
+| **Network** | IPv4 Addresses, Proxy Server IPs, VPN Config Links (`vless://`, `vmess://`, `ss://`, `trojan://`, `clash://`, `amnezia://`). | VPN link structure mapping. |
 
----
 
 ## Keyboard Shortcuts
 
@@ -68,42 +64,6 @@ Everything runs locally in your browser memory via Web Workers, ensuring no data
 | **Search** | `Ctrl + F` | Search and replace inside the editor |
 | **Close Search** | `Escape` | Close the search widget |
 
----
-
-## Project Structure Map
-
-```
-📁 Redactify
-├── 📁 public                 # Static application assets
-│   ├── 📄 favicon.svg        # Browser tab icon
-│   ├── 📄 redactify-bg.png   # App preview screenshot
-│   └── 📄 redactify-logo.png # Project logo
-├── 📁 src                    # Frontend React & TypeScript codebase
-│   ├── 📁 assets             # UI icon assets (r_logo.svg)
-│   ├── 📁 components         # UI Components
-│   │   └── 📄 ScannerPanel.tsx # Side panel for PII detection strategy & findings list
-│   ├── 📁 lib                # Masking logic & scanning engines
-│   │   ├── 📄 applyRedaction.ts # Strategic text replacements & Monaco edits
-│   │   ├── 📄 piiRules.ts    # Regex specifications and checksum validators for PII
-│   │   └── 📄 scoring.ts     # Confidence-scoring algorithm with context assessment
-│   ├── 📁 store              # State management
-│   │   └── 📄 useScanStore.ts # Zustand store for active worker & PII scanner state
-│   ├── 📁 types              # TypeScript type definitions
-│   │   └── 📄 fast-levenshtein.d.ts # Typings for Levenshtein comparison utility
-│   ├── 📁 workers            # Multi-threading workers
-│   │   └── 📄 scanner.worker.ts # Web Worker doing the heavy lifting of regex scanning
-│   ├── 📄 App.tsx            # Main application layout, Monaco setup, scroll sync
-│   ├── 📄 index.css          # Tailwind CSS global setup & custom styles
-│   ├── 📄 main.tsx           # React bootstrap entry point
-│   ├── 📄 store.ts           # Zustand settings store (strict masking, word snap, etc.)
-│   └── 📄 vite-env.d.ts      # Vite TypeScript environment declarations
-├── 📄 index.html             # HTML entry template
-├── 📄 package.json           # Node.json metadata, scripts, and dependencies
-├── 📄 tsconfig.json          # TypeScript compilation options
-└── 📄 vite.config.ts         # Vite bundler configuration
-```
-
----
 
 ## Quick Start
 
