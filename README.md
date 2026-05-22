@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/noleston/redactify/refs/heads/main/public/redactify-logo.png" alt="Redactify Logo" width="80%" />
-</p>
+<a href="https://redactify-two.vercel.app">
+    <img width="1024" alt="Redactify Preview" src="https://github.com/noleston/redactify/blob/main/public/redactify-bg.png" />
+</a>
 
 <div align="center">
 
